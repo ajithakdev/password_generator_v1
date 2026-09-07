@@ -95,4 +95,49 @@ describe('caseConverter logic', () => {
     expect(map.dot).toBe('user.account.setting');
     expect(map.path).toBe('user/account/setting');
   });
+
+  it('preserves accented and international letters across case conversions', () => {
+    const cafeWords = extractWords('caféLatte');
+    expect(cafeWords).toEqual(['café', 'Latte']);
+    expect(toSnakeCase(cafeWords)).toBe('café_latte');
+    expect(toPascalCase(cafeWords)).toBe('CaféLatte');
+    expect(toConstantCase(cafeWords)).toBe('CAFÉ_LATTE');
+    expect(toKebabCase(cafeWords)).toBe('café-latte');
+    expect(toTitleCase(cafeWords)).toBe('Café Latte');
+    expect(toSentenceCase(cafeWords)).toBe('Café latte');
+    expect(toDotCase(cafeWords)).toBe('café.latte');
+    expect(toPathCase(cafeWords)).toBe('café/latte');
+
+    const multiAccented = extractWords('Café & Restaurant');
+    expect(multiAccented).toEqual(['Café', 'Restaurant']);
+    expect(toCamelCase(multiAccented)).toBe('caféRestaurant');
+    expect(toSnakeCase(multiAccented)).toBe('café_restaurant');
+  });
+
+  it('handles words written entirely in non-Latin scripts', () => {
+    // Cyrillic
+    const cyrillicWords = extractWords('приветМир');
+    expect(cyrillicWords).toEqual(['привет', 'Мир']);
+    expect(toSnakeCase(cyrillicWords)).toBe('привет_мир');
+    expect(toCamelCase(extractWords('привет_мир'))).toBe('приветМир');
+    expect(toPascalCase(cyrillicWords)).toBe('ПриветМир');
+    expect(toConstantCase(cyrillicWords)).toBe('ПРИВЕТ_МИР');
+    expect(toKebabCase(cyrillicWords)).toBe('привет-мир');
+    expect(toSlug('Привет Мир')).toBe('привет-мир');
+
+    // Greek
+    const greekWords = extractWords('γειαΣου');
+    expect(greekWords).toEqual(['γεια', 'Σου']);
+    expect(toSnakeCase(greekWords)).toBe('γεια_σου');
+    expect(toPascalCase(greekWords)).toBe('ΓειαΣου');
+  });
+
+  it('detects casing correctly for international text', () => {
+    expect(detectCasing('caféLatte')).toBe('camelCase');
+    expect(detectCasing('CaféLatte')).toBe('PascalCase');
+    expect(detectCasing('café_latte')).toBe('snake_case');
+    expect(detectCasing('CAFÉ_LATTE')).toBe('CONSTANT_CASE');
+    expect(detectCasing('приветМир')).toBe('camelCase');
+    expect(detectCasing('привет_мир')).toBe('snake_case');
+  });
 });

@@ -12,13 +12,14 @@ export interface CaseResult {
 export function extractWords(input: string): string[] {
   if (!input || !input.trim()) return [];
 
-  // 1. Separate camelCase/PascalCase boundaries (e.g. "fooBar" -> "foo Bar", "XMLHttpRequest" -> "XML Http Request")
+  // 1. Separate camelCase/PascalCase boundaries (including Unicode letters)
+  // e.g. "caféLatte" -> "café Latte", "приветМир" -> "привет Мир", "XMLHttpRequest" -> "XML Http Request"
   const separated = input
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
+    .replace(/([\p{Ll}\p{N}])([\p{Lu}\p{Lt}])/gu, '$1 $2')
+    .replace(/([\p{Lu}\p{Lt}]+)([\p{Lu}\p{Lt}][\p{Ll}])/gu, '$1 $2');
 
-  // 2. Split by any non-alphanumeric separator (spaces, underscores, hyphens, dots, slashes)
-  const matches = separated.match(/[a-zA-Z0-9]+/g);
+  // 2. Extract words composed of Unicode letters and numbers
+  const matches = separated.match(/[\p{L}\p{N}]+/gu);
   return matches || [];
 }
 
@@ -80,10 +81,10 @@ export function toSlug(input: string): string {
   if (!input) return '';
   return input
     .normalize('NFD') // normalize unicode
-    .replace(/[\u0300-\u036f]/g, '') // strip diacritics (é -> e, ñ -> n)
+    .replace(/[\u0300-\u036f]/g, '') // strip Latin diacritics (é -> e, ñ -> n)
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9\s-_]/g, '') // remove special chars
+    .replace(/[^\p{L}\p{N}\s\-_]/gu, '') // preserve letters & digits across scripts, strip punctuation
     .replace(/[\s_]+/g, '-') // spaces and underscores to hyphens
     .replace(/-+/g, '-') // collapse consecutive hyphens
     .replace(/^-+|-+$/g, ''); // trim leading/trailing hyphens
@@ -93,13 +94,13 @@ export function detectCasing(input: string): string {
   const trimmed = input.trim();
   if (!trimmed) return 'Unknown';
 
-  if (/^[a-z]+(?:[A-Z][a-z0-9]*)+$/.test(trimmed)) return 'camelCase';
-  if (/^[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+$/.test(trimmed)) return 'PascalCase';
-  if (/^[a-z0-9]+(?:_[a-z0-9]+)+$/.test(trimmed)) return 'snake_case';
-  if (/^[A-Z0-9]+(?:_[A-Z0-9]+)+$/.test(trimmed)) return 'CONSTANT_CASE';
-  if (/^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(trimmed)) return 'kebab-case';
-  if (/^[a-z0-9]+(?:\.[a-z0-9]+)+$/.test(trimmed)) return 'dot.case';
-  if (/^[a-z0-9]+(?:\/[a-z0-9]+)+$/.test(trimmed)) return 'path/case';
+  if (/^[\p{Ll}]+(?:[\p{Lu}\p{Lt}][\p{Ll}\p{N}]*)+$/u.test(trimmed)) return 'camelCase';
+  if (/^[\p{Lu}\p{Lt}][\p{Ll}\p{N}]+(?:[\p{Lu}\p{Lt}][\p{Ll}\p{N}]*)+$/u.test(trimmed)) return 'PascalCase';
+  if (/^[\p{Ll}\p{N}]+(?:_[\p{Ll}\p{N}]+)+$/u.test(trimmed)) return 'snake_case';
+  if (/^[\p{Lu}\p{Lt}\p{N}]+(?:_[\p{Lu}\p{Lt}\p{N}]+)+$/u.test(trimmed)) return 'CONSTANT_CASE';
+  if (/^[\p{Ll}\p{N}]+(?:-[\p{Ll}\p{N}]+)+$/u.test(trimmed)) return 'kebab-case';
+  if (/^[\p{Ll}\p{N}]+(?:\.[\p{Ll}\p{N}]+)+$/u.test(trimmed)) return 'dot.case';
+  if (/^[\p{Ll}\p{N}]+(?:\/[\p{Ll}\p{N}]+)+$/u.test(trimmed)) return 'path/case';
 
   return 'Natural text';
 }
