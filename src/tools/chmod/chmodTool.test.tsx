@@ -123,4 +123,78 @@ describe('ChmodTool Component', () => {
 
     expect(container.textContent).toContain('chmod 755 script.sh');
   });
+
+  it('allows intermediate editing in octal input and resets on blur if invalid', async () => {
+    renderTool();
+
+    const octalInput = container.querySelector(
+      'input[aria-label="Octal permission value"]'
+    ) as HTMLInputElement;
+
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+
+    // Type intermediate 2 digits: "75"
+    await act(async () => {
+      nativeSetter?.call(octalInput, '75');
+      octalInput.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 20));
+    });
+
+    expect(octalInput.value).toBe('75');
+
+    // Blur without completing 3rd digit -> resets to canonical octal
+    await act(async () => {
+      octalInput.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+      octalInput.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 20));
+    });
+
+    expect(octalInput.value).toBe('755');
+  });
+
+  it('toggles between file and directory types for ls-style preview', async () => {
+    renderTool();
+
+    // Default is file with '-' prefix
+    expect(container.textContent).toContain('-rwxr-xr-x');
+
+    const dirButton = Array.from(container.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Directory (d)')
+    );
+    expect(dirButton).toBeDefined();
+
+    await act(async () => {
+      dirButton?.click();
+      await new Promise((r) => setTimeout(r, 20));
+    });
+
+    // Switches to 'd' prefix for directory
+    expect(container.textContent).toContain('drwxr-xr-x');
+  });
+
+  it('escapes filenames with shell metacharacters in generated commands', async () => {
+    renderTool();
+
+    const filenameInput = container.querySelector(
+      'input[aria-label="Target file name"]'
+    ) as HTMLInputElement;
+    expect(filenameInput).not.toBeNull();
+
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+
+    await act(async () => {
+      nativeSetter?.call(filenameInput, 'my script; rm -rf /');
+      filenameInput.dispatchEvent(new Event('input', { bubbles: true }));
+      filenameInput.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 20));
+    });
+
+    expect(container.textContent).toContain("chmod 755 'my script; rm -rf /'");
+  });
 });

@@ -77,8 +77,6 @@ export function toSymbolic(state: ChmodState): string {
 }
 
 export function toSymbolicCommand(state: ChmodState): string {
-  const parts: string[] = [];
-
   const getPermStr = (p: PermissionState) => {
     let str = '';
     if (p.read) str += 'r';
@@ -91,11 +89,18 @@ export function toSymbolicCommand(state: ChmodState): string {
   const g = getPermStr(state.group) + (state.special.sgid ? 's' : '');
   const o = getPermStr(state.other) + (state.special.sticky ? 't' : '');
 
-  if (u) parts.push(`u=${u}`);
-  if (g) parts.push(`g=${g}`);
-  if (o) parts.push(`o=${o}`);
+  return `u=${u},g=${g},o=${o}`;
+}
 
-  return parts.length > 0 ? parts.join(',') : 'ugo=';
+/**
+ * Safely escapes an argument for POSIX shells to prevent command injection.
+ */
+export function escapeShellArg(arg: string): string {
+  if (!arg) return "''";
+  if (/^[a-zA-Z0-9._/-]+$/.test(arg)) {
+    return arg;
+  }
+  return `'${arg.replace(/'/g, `'\\''`)}'`;
 }
 
 export function parseOctal(input: string): ChmodState | null {

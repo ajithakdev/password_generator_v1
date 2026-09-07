@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ToolLayout } from '../../components/ToolLayout';
 import { Button } from '../../components/ui/Button';
 import { CopyButton } from '../../components/ui/CopyButton';
@@ -8,6 +8,7 @@ import {
   toSymbolic,
   toSymbolicCommand,
   parseOctal,
+  escapeShellArg,
   DEFAULT_CHMOD_STATE,
   PRESETS,
   type ChmodState,
@@ -18,12 +19,19 @@ import {
 export default function ChmodTool() {
   const [octalParam, setOctalParam] = useUrlState('v', '755', String, String);
   const [filename, setFilename] = useState('script.sh');
+  const [fileType, setFileType] = useState<'file' | 'dir'>('file');
 
   const [state, setState] = useState<ChmodState>(() => {
     return parseOctal(octalParam) || DEFAULT_CHMOD_STATE;
   });
 
   const octal = useMemo(() => toOctal(state), [state]);
+  const [octalInput, setOctalInput] = useState(octal);
+
+  useEffect(() => {
+    setOctalInput(octal);
+  }, [octal]);
+
   const symbolic = useMemo(() => toSymbolic(state), [state]);
   const symbolicCmd = useMemo(() => toSymbolicCommand(state), [state]);
 
@@ -36,11 +44,17 @@ export default function ChmodTool() {
   };
 
   const handleOctalInput = (val: string) => {
-    const parsed = parseOctal(val);
+    const filtered = val.replace(/[^0-7]/g, '').slice(0, 4);
+    setOctalInput(filtered);
+    const parsed = parseOctal(filtered);
     if (parsed) {
       setState(parsed);
       setOctalParam(toOctal(parsed));
     }
+  };
+
+  const handleOctalBlur = () => {
+    setOctalInput(octal);
   };
 
   const setPerm = (role: 'user' | 'group' | 'other', perm: keyof PermissionState, val: boolean) => {
@@ -76,10 +90,12 @@ export default function ChmodTool() {
     setOctalParam('755');
   };
 
-  const chmodCmd = `chmod ${octal} ${filename}`;
-  const chmodSymCmd = `chmod ${symbolicCmd} ${filename}`;
-  const isDirectory = state.special.sticky || octal.endsWith('5');
-  const lsStyle = `${isDirectory ? 'd' : '-'}${symbolic} 1 user staff 4096 Sep 7 12:00 ${filename}`;
+  const isDirectory = fileType === 'dir';
+  const targetName = filename || (isDirectory ? 'directory' : 'script.sh');
+  const safeFilename = escapeShellArg(targetName);
+  const chmodCmd = `chmod ${octal} ${safeFilename}`;
+  const chmodSymCmd = `chmod ${symbolicCmd} ${safeFilename}`;
+  const lsStyle = `${isDirectory ? 'd' : '-'}${symbolic} 1 user staff 4096 Sep 7 12:00 ${targetName}`;
 
   return (
     <ToolLayout>
@@ -143,8 +159,9 @@ export default function ChmodTool() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <input
                 type="text"
-                value={octal}
+                value={octalInput}
                 onChange={(e) => handleOctalInput(e.target.value)}
+                onBlur={handleOctalBlur}
                 maxLength={4}
                 aria-label="Octal permission value"
                 style={{
@@ -319,24 +336,63 @@ export default function ChmodTool() {
 
         {/* Commands & File Name */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>Target file name:</span>
-            <input
-              type="text"
-              value={filename}
-              onChange={(e) => setFilename(e.target.value)}
-              placeholder="filename.sh"
-              style={{
-                padding: '6px 10px',
-                borderRadius: 8,
-                border: '1px solid var(--line)',
-                background: 'var(--surface-input)',
-                fontSize: 13,
-                fontFamily: 'var(--font-mono)',
-                color: 'var(--ink)',
-                outline: 'none',
-              }}
-            />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>Target name:</span>
+              <input
+                type="text"
+                value={filename}
+                onChange={(e) => setFilename(e.target.value)}
+                placeholder={isDirectory ? 'directory' : 'script.sh'}
+                aria-label="Target file name"
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 8,
+                  border: '1px solid var(--line)',
+                  background: 'var(--surface-input)',
+                  fontSize: 13,
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--ink)',
+                  outline: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 12, color: 'var(--ink-mute)', fontWeight: 500 }}>Type:</span>
+              <button
+                type="button"
+                onClick={() => setFileType('file')}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  background: !isDirectory ? 'rgba(139, 92, 246, 0.18)' : 'var(--surface-button-off)',
+                  border: `1px solid ${!isDirectory ? 'rgba(139, 92, 246, 0.4)' : 'var(--line)'}`,
+                  color: 'var(--ink)',
+                }}
+              >
+                File (-)
+              </button>
+              <button
+                type="button"
+                onClick={() => setFileType('dir')}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  background: isDirectory ? 'rgba(139, 92, 246, 0.18)' : 'var(--surface-button-off)',
+                  border: `1px solid ${isDirectory ? 'rgba(139, 92, 246, 0.4)' : 'var(--line)'}`,
+                  color: 'var(--ink)',
+                }}
+              >
+                Directory (d)
+              </button>
+            </div>
           </div>
 
           <div

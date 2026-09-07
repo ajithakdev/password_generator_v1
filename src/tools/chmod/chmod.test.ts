@@ -8,6 +8,7 @@ import {
   PRESETS,
   calculateOctalPart,
   calculateSpecialPart,
+  escapeShellArg,
   type ChmodState,
 } from './chmod';
 
@@ -39,7 +40,7 @@ describe('chmod calculation logic', () => {
     };
     expect(toOctal(state)).toBe('600');
     expect(toSymbolic(state)).toBe('rw-------');
-    expect(toSymbolicCommand(state)).toBe('u=rw');
+    expect(toSymbolicCommand(state)).toBe('u=rw,g=,o=');
   });
 
   it('calculates permissions with special bits: SUID (4755)', () => {
@@ -128,12 +129,23 @@ describe('chmod calculation logic', () => {
     };
     expect(toOctal(empty)).toBe('000');
     expect(toSymbolic(empty)).toBe('---------');
-    expect(toSymbolicCommand(empty)).toBe('ugo=');
+    expect(toSymbolicCommand(empty)).toBe('u=,g=,o=');
   });
 
   it('computes individual bit values accurately', () => {
     expect(calculateOctalPart({ read: true, write: true, execute: true })).toBe(7);
     expect(calculateOctalPart({ read: true, write: false, execute: true })).toBe(5);
     expect(calculateSpecialPart({ suid: true, sgid: true, sticky: true })).toBe(7);
+  });
+
+  it('escapes shell arguments to prevent command injection', () => {
+    expect(escapeShellArg('script.sh')).toBe('script.sh');
+    expect(escapeShellArg('my-script_v1.0.sh')).toBe('my-script_v1.0.sh');
+    expect(escapeShellArg('path/to/my_file.py')).toBe('path/to/my_file.py');
+    expect(escapeShellArg('')).toBe("''");
+    expect(escapeShellArg('file with spaces.txt')).toBe("'file with spaces.txt'");
+    expect(escapeShellArg('script.sh; rm -rf /')).toBe("'script.sh; rm -rf /'");
+    expect(escapeShellArg('file$(whoami)test')).toBe("'file$(whoami)test'");
+    expect(escapeShellArg("it's a file")).toBe("'it'\\''s a file'");
   });
 });
