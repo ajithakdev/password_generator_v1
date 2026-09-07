@@ -102,6 +102,11 @@ export function detectCasing(input: string): string {
   if (/^[\p{Ll}\p{N}]+(?:\.[\p{Ll}\p{N}]+)+$/u.test(trimmed)) return 'dot.case';
   if (/^[\p{Ll}\p{N}]+(?:\/[\p{Ll}\p{N}]+)+$/u.test(trimmed)) return 'path/case';
 
+  // Explicit single-word formats
+  if (/^[\p{Lu}\p{Lt}][\p{Ll}\p{N}]*$/u.test(trimmed)) return 'Capitalized';
+  if (/^[\p{Ll}\p{N}]+$/u.test(trimmed)) return 'lowercase';
+  if (/^[\p{Lu}\p{Lt}\p{N}]+$/u.test(trimmed)) return 'UPPERCASE';
+
   return 'Natural text';
 }
 

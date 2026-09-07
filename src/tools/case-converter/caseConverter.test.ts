@@ -75,6 +75,12 @@ describe('caseConverter logic', () => {
     expect(detectCasing('kebab-case')).toBe('kebab-case');
     expect(detectCasing('dot.case')).toBe('dot.case');
     expect(detectCasing('path/case')).toBe('path/case');
+    expect(detectCasing('lowercase')).toBe('lowercase');
+    expect(detectCasing('UPPERCASE')).toBe('UPPERCASE');
+    expect(detectCasing('Camel')).toBe('Capitalized');
+    expect(detectCasing('Café')).toBe('Capitalized');
+    expect(detectCasing('café')).toBe('lowercase');
+    expect(detectCasing('CAFÉ')).toBe('UPPERCASE');
     expect(detectCasing('Plain english text here')).toBe('Natural text');
     expect(detectCasing('')).toBe('Unknown');
   });
