@@ -32,6 +32,13 @@ export default function ChmodTool() {
     setOctalInput(octal);
   }, [octal]);
 
+  useEffect(() => {
+    const parsed = parseOctal(octalParam);
+    if (parsed) {
+      setState(parsed);
+    }
+  }, [octalParam]);
+
   const symbolic = useMemo(() => toSymbolic(state), [state]);
   const symbolicCmd = useMemo(() => toSymbolicCommand(state), [state]);
 

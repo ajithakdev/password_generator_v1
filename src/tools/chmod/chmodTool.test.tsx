@@ -66,17 +66,44 @@ describe('ChmodTool Component', () => {
   it('toggles permission checkboxes and updates outputs', async () => {
     renderTool();
 
+    // Verify initial state (755, rwxr-xr-x)
+    expect(container.textContent).toContain('755');
+    expect(container.textContent).toContain('rwxr-xr-x');
+    expect(container.textContent).toContain('chmod 755 script.sh');
+
     const checkboxes = Array.from(
       container.querySelectorAll('input[type="checkbox"]')
     ) as HTMLInputElement[];
-    const firstCheckbox = checkboxes[0]; // User read
+    const userReadCheckbox = checkboxes[0]; // User read
 
+    // Uncheck User Read -> transforms 755 to 355 (-wxr-xr-x)
     await act(async () => {
-      firstCheckbox.click();
+      userReadCheckbox.click();
       await new Promise((r) => setTimeout(r, 50));
     });
 
-    expect(container.textContent).toContain('chmod');
+    expect(container.textContent).toContain('355');
+    expect(container.textContent).toContain('-wxr-xr-x');
+    expect(container.textContent).toContain('chmod 355 script.sh');
+    expect(container.textContent).toContain('u=wx,g=rx,o=rx');
+
+    // Check User Read again -> restores 755 (rwxr-xr-x)
+    await act(async () => {
+      userReadCheckbox.click();
+      await new Promise((r) => setTimeout(r, 50));
+    });
+
+    expect(container.textContent).toContain('755');
+    expect(container.textContent).toContain('rwxr-xr-x');
+    expect(container.textContent).toContain('chmod 755 script.sh');
+  });
+
+  it('loads and reflects permissions from URL parameters (?v=644)', () => {
+    renderTool('/tools/chmod?v=644');
+
+    expect(container.textContent).toContain('644');
+    expect(container.textContent).toContain('rw-r--r--');
+    expect(container.textContent).toContain('chmod 644 script.sh');
   });
 
   it('handles reverse lookup via octal text input', async () => {
