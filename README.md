@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blueviolet.svg)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-149eca.svg)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org)
-[![Vite](https://img.shields.io/badge/Vite-6-646cff.svg)](https://vitejs.dev)
+[![Vite](https://img.shields.io/badge/Vite-8-646cff.svg)](https://vitejs.dev)
 [![CI/CD](https://github.com/ajithakdev/toolglass/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/ajithakdev/toolglass/actions/workflows/ci-cd.yml)
 
 🔗 **Try it live:** [ajithakdev.github.io/toolglass](https://ajithakdev.github.io/toolglass/)
@@ -40,7 +40,7 @@ Toolglass is a zero-telemetry, offline-first suite of developer tools running en
 1. **Zero Network Calls:** Everything executes on the client thread using standard Web APIs (`crypto.subtle`, `crypto.getRandomValues`, `DOMParser`).
 2. **Cryptographic Rigor:** Randomness is strictly backed by CSPRNG with rejection sampling to eliminate modulo bias. We never use `Math.random()`.
 3. **Instant Keyboard Navigation:** Hit `⌘K` or `Ctrl+K` anywhere to open the command palette and jump between tools without taking your hands off the keyboard.
-4. **Shareable State:** All input state syncs to URL query params (debounced) so you can bookmark or share exact settings with teammates.
+4. **Shareable State:** Key tool configurations sync to URL query params (debounced) so you can bookmark or share exact settings with teammates.
 5. **No Bloat:** Every tool is code-split via dynamic `React.lazy()` imports. The initial load is tiny (~130 KB gzipped) and tools load on demand.
 
 ---
@@ -64,12 +64,12 @@ npm run dev
 ### Common Scripts
 
 ```bash
-npm run dev          # Start local dev server at http://localhost:5173
-npm run build        # Strict type-check (tsc -b) followed by production Vite build
-npm run preview      # Preview production bundle locally
-npm run lint         # Run ESLint across code and tests
-npm test             # Run Vitest test suite once
-npm run test:coverage# Generate test coverage report
+npm run dev            # Start local dev server at http://localhost:5173
+npm run build          # Strict type-check (tsc -b) followed by production Vite build
+npm run preview        # Preview production bundle locally
+npm run lint           # Run ESLint across code and tests
+npm test               # Run Vitest test suite once
+npm run test:coverage  # Generate test coverage report
 ```
 
 ---

@@ -45,7 +45,7 @@ npm test src/tools/password/    # run tests for a specific tool
 npm run test:coverage           # coverage report
 ```
 
-Zero external npm dependencies for tools: prefer pure browser Web APIs (e.g. Web Crypto, URL, Canvas, DOMParser, regex).
+Zero/minimal external dependencies: Prefer native browser Web APIs (e.g. Web Crypto, URL, Canvas, DOMParser, regex). Introducing new runtime dependencies requires prior maintainer discussion and strong justification (as done for established standards like `marked`, `dompurify`, and `qrcode`).
 
 ## Adding a new tool
 
@@ -72,7 +72,7 @@ Tools follow a modular registry pattern:
 
 ## Code of Conduct
 
-We are committed to providing a welcoming, inclusive, and harassment-free experience for all contributors. Please review and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) in all project interactions.
+We are committed to providing a welcoming, inclusive, and harassment-free experience for all contributors. Please review and adhere to our [Code of Conduct](../CODE_OF_CONDUCT.md) in all project interactions.
 
 ## Branch and commit naming
 
