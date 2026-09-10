@@ -102,8 +102,12 @@ src/
 
 ## 🤝 Contributing
 
-PRs welcome — adding a new tool is intentionally a tiny diff (one folder + one registry line). Open an issue first if proposing a large change.
+Contributions of all sizes are welcome! Adding a new tool is intentionally a tiny diff (one folder + one registry entry).
+
+- Read our **[Contributing Guide](.github/CONTRIBUTING.md)** for local development setup, code conventions, and testing instructions.
+- All contributors are expected to uphold our **[Code of Conduct](CODE_OF_CONDUCT.md)**.
+- Review our **[Security Policy](SECURITY.md)** for vulnerability reporting.
 
 ## 📄 License
 
-[MIT](LICENSE) © ajithakdev
+[MIT](LICENSE) © 2026 [ajithakdev](https://github.com/ajithakdev)
